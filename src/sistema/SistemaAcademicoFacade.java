@@ -28,42 +28,99 @@ public class SistemaAcademicoFacade {
 
     private void cargarDatosPrueba() {
 
-        Profesor prof =
-                new Profesor("Carlos", "Gómez", 12345678);
+        // Profesores
+        Profesor profesor1 =
+                new Profesor("Carlos", "Gomez", 12345678);
 
-        Coordinador coord =
-                new Coordinador("Ana", "Martínez", 87654321);
+        Profesor profesor2 =
+                new Profesor("Laura", "Fernandez", 23456789);
 
-        Carrera carrera =
+        Profesor profesor3 =
+                new Profesor("Mario", "Lopez", 34567890);
+
+        Profesor profesor4 =
+                new Profesor("Sofia", "Martinez", 45678901);
+
+        // Coordinadores
+        Coordinador coordinador1 =
+                new Coordinador("Ana", "Martinez", 87654321);
+
+        Coordinador coordinador2 =
+                new Coordinador("Pedro", "Ramirez", 76543210);
+
+        // Carreras
+        Carrera carrera1 =
                 new Carrera(
-                        "Tecnicatura en Sistemas",
-                        3,
-                        coord,
+                        "Ingenieria en Sistemas",
+                        5,
+                        coordinador1,
                         15000.0,
                         20000.0
                 );
 
-        Materia materia =
-                new Materia(
-                        "Programación I",
-                        1,
-                        1,
-                        prof
+        Carrera carrera2 =
+                new Carrera(
+                        "Licenciatura en Informatica",
+                        4,
+                        coordinador2,
+                        14000.0,
+                        19000.0
                 );
 
-        carrera.agregarMateria(materia);
+        // Materias de la primera carrera
+        Materia materia1 =
+                new Materia(
+                        "Programacion I",
+                        1,
+                        1,
+                        profesor1
+                );
 
-        carreras.add(carrera);
-        profesores.add(prof);
-        coordinadores.add(coord);
+        Materia materia2 =
+                new Materia(
+                        "Matematica Discreta",
+                        1,
+                        1,
+                        profesor2
+                );
+
+        // Materias de la segunda carrera
+        Materia materia3 =
+                new Materia(
+                        "Algoritmos",
+                        1,
+                        1,
+                        profesor3
+                );
+
+        Materia materia4 =
+                new Materia(
+                        "Base de Datos",
+                        1,
+                        1,
+                        profesor4
+                );
+
+        carrera1.agregarMateria(materia1);
+        carrera1.agregarMateria(materia2);
+
+        carrera2.agregarMateria(materia3);
+        carrera2.agregarMateria(materia4);
+
+        carreras.add(carrera1);
+        carreras.add(carrera2);
+
+        profesores.add(profesor1);
+        profesores.add(profesor2);
+        profesores.add(profesor3);
+        profesores.add(profesor4);
+
+        coordinadores.add(coordinador1);
+        coordinadores.add(coordinador2);
     }
 
     public List<Carrera> getCarreras() {
         return carreras;
-    }
-
-    public List<Alumno> getAlumnos() {
-        return alumnos;
     }
 
     public List<Inscripcion> getInscripciones() {
@@ -112,5 +169,119 @@ public class SistemaAcademicoFacade {
         }
 
         return null;
+    }
+
+    public String matricularAlumno(
+            String nombre,
+            String apellido,
+            int dni,
+            int legajo,
+            int indiceCarrera) {
+
+        if (buscarAlumnoPorLegajo(legajo) != null) {
+            return "Error: ya existe un alumno con ese legajo.";
+        }
+
+        if (indiceCarrera < 0 || indiceCarrera >= carreras.size()) {
+            return "Opcion de carrera invalida.";
+        }
+
+        Alumno nuevoAlumno =
+                new Alumno(nombre, apellido, dni, legajo);
+
+        Carrera carrera =
+                carreras.get(indiceCarrera);
+
+        if (!carrera.matricularAlumno(nuevoAlumno)) {
+            return "El alumno ya estaba matriculado en la carrera.";
+        }
+
+        alumnos.add(nuevoAlumno);
+
+        return "Alumno matriculado con exito en "
+                + carrera.getNombre();
+    }
+
+    public String inscribirAlumno(
+            int legajo,
+            int indiceCarrera,
+            String nombreMateria) {
+
+        Alumno alumno =
+                buscarAlumnoPorLegajo(legajo);
+
+        if (alumno == null) {
+            return "No existe un alumno con ese legajo.";
+        }
+
+        if (indiceCarrera < 0
+                || indiceCarrera >= carreras.size()) {
+
+            return "Opcion de carrera invalida.";
+        }
+
+        Carrera carrera =
+                carreras.get(indiceCarrera);
+
+        Materia materia =
+                carrera.buscarMateria(nombreMateria);
+
+        if (materia == null) {
+            return "La materia no pertenece a la carrera seleccionada.";
+        }
+
+        if (!carrera.estaMatriculado(alumno)) {
+            return "El alumno no esta matriculado en esta carrera.";
+        }
+
+        if (buscarInscripcion(legajo, nombreMateria) != null) {
+            return "El alumno ya esta inscripto en esta materia.";
+        }
+
+        Inscripcion nuevaInscripcion =
+                new Inscripcion(alumno, materia);
+
+        inscripciones.add(nuevaInscripcion);
+
+        return "Inscripcion realizada con exito.";
+    }
+
+    public String registrarAsistencia(
+            int legajo,
+            String nombreMateria,
+            boolean presente) {
+
+        Inscripcion inscripcion =
+                buscarInscripcion(legajo, nombreMateria);
+
+        if (inscripcion == null) {
+            return "No existe una inscripcion para ese alumno y materia.";
+        }
+
+        if (presente) {
+            inscripcion.registrarAsistencia();
+            return "Asistencia registrada correctamente.";
+        }
+
+        inscripcion.registrarInasistencia();
+
+        return "Inasistencia registrada correctamente.";
+    }
+
+    public String cargarSituacionFinal(
+            int legajo,
+            String nombreMateria,
+            String estado) {
+
+        Inscripcion inscripcion =
+                buscarInscripcion(legajo, nombreMateria);
+
+        if (inscripcion == null) {
+            return "No existe una inscripcion para ese alumno y materia.";
+        }
+
+        inscripcion.cargarSituacionFinal(estado);
+
+        return "Situacion final registrada correctamente.";
     }
 }
