@@ -172,79 +172,96 @@ public class SistemaAcademicoFacade {
     }
 
     public String matricularAlumno(
-            String nombre,
-            String apellido,
-            int dni,
-            int legajo,
-            int indiceCarrera) {
+        String nombre,
+        String apellido,
+        int dni,
+        int legajo,
+        int indiceCarrera) {
 
-        if (buscarAlumnoPorLegajo(legajo) != null) {
-            return "Error: ya existe un alumno con ese legajo.";
-        }
-
-        if (indiceCarrera < 0 || indiceCarrera >= carreras.size()) {
-            return "Opcion de carrera invalida.";
-        }
-
-        Alumno nuevoAlumno =
-                new Alumno(nombre, apellido, dni, legajo);
-
-        Carrera carrera =
-                carreras.get(indiceCarrera);
-
-        if (!carrera.matricularAlumno(nuevoAlumno)) {
-            return "El alumno ya estaba matriculado en la carrera.";
-        }
-
-        alumnos.add(nuevoAlumno);
-
-        return "Alumno matriculado con exito en "
-                + carrera.getNombre();
+    if (buscarAlumnoPorLegajo(legajo) != null) {
+        return "Error: ya existe un alumno con ese legajo.";
     }
+
+    if (indiceCarrera < 0 || indiceCarrera >= carreras.size()) {
+        return "Opcion de carrera invalida.";
+    }
+
+    Alumno nuevoAlumno =
+            new Alumno(nombre, apellido, dni, legajo);
+
+    Carrera carrera =
+            carreras.get(indiceCarrera);
+
+    if (!carrera.matricularAlumno(nuevoAlumno)) {
+        return "El alumno ya estaba matriculado en la carrera.";
+    }
+
+    alumnos.add(nuevoAlumno);
+
+    return "Alumno matriculado con exito en "
+            + carrera.getNombre();
+}
 
     public String inscribirAlumno(
-            int legajo,
-            int indiceCarrera,
-            String nombreMateria) {
+        int legajo,
+        int indiceCarrera,
+        String nombreMateria) {
 
-        Alumno alumno =
-                buscarAlumnoPorLegajo(legajo);
+    Alumno alumno =
+            buscarAlumnoPorLegajo(legajo);
 
-        if (alumno == null) {
-            return "No existe un alumno con ese legajo.";
-        }
-
-        if (indiceCarrera < 0
-                || indiceCarrera >= carreras.size()) {
-
-            return "Opcion de carrera invalida.";
-        }
-
-        Carrera carrera =
-                carreras.get(indiceCarrera);
-
-        Materia materia =
-                carrera.buscarMateria(nombreMateria);
-
-        if (materia == null) {
-            return "La materia no pertenece a la carrera seleccionada.";
-        }
-
-        if (!carrera.estaMatriculado(alumno)) {
-            return "El alumno no esta matriculado en esta carrera.";
-        }
-
-        if (buscarInscripcion(legajo, nombreMateria) != null) {
-            return "El alumno ya esta inscripto en esta materia.";
-        }
-
-        Inscripcion nuevaInscripcion =
-                new Inscripcion(alumno, materia);
-
-        inscripciones.add(nuevaInscripcion);
-
-        return "Inscripcion realizada con exito.";
+    if (alumno == null) {
+        return "No existe un alumno con ese legajo.";
     }
+
+    if (indiceCarrera < 0
+            || indiceCarrera >= carreras.size()) {
+
+        return "Opcion de carrera invalida.";
+    }
+
+    Carrera carrera =
+            carreras.get(indiceCarrera);
+
+    Materia materia =
+            buscarMateriaPorNombre(nombreMateria);
+
+    if (materia == null) {
+        return "No existe una materia con ese nombre.";
+    }
+
+    ValidadorInscripcion validadorMatricula =
+            new ValidadorMatriculaCarrera();
+
+    ValidadorInscripcion validadorMateria =
+            new ValidadorMateriaCarrera();
+
+    ValidadorInscripcion validadorDuplicado =
+            new ValidadorInscripcionDuplicada();
+
+    validadorMatricula
+            .setSiguiente(validadorMateria)
+            .setSiguiente(validadorDuplicado);
+
+    String error =
+            validadorMatricula.validar(
+                    alumno,
+                    carrera,
+                    materia,
+                    inscripciones
+            );
+
+    if (error != null) {
+        return error;
+    }
+
+    Inscripcion nuevaInscripcion =
+            new Inscripcion(alumno, materia);
+
+    inscripciones.add(nuevaInscripcion);
+
+    return "Inscripcion realizada con exito.";
+}
 
     public String registrarAsistencia(
             int legajo,
